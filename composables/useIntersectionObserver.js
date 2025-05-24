@@ -1,37 +1,37 @@
-export const useIntersectionObserver = () => {
-  const observer = ref(null)
-  const observedElements = ref([])
+import { onUnmounted } from 'vue'
 
-  const initObserver = (options) => {
-    observer.value = new IntersectionObserver((entries) => {
+export const useIntersectionObserver = () => {
+  let observer
+  const observedElements = new Set()
+
+  const observe = (element, callback, options = { threshold: 0.3 }) => {
+    // Não observar novamente se já foi observado
+    if (observedElements.has(element)) return
+    
+    observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          const target = entry.target
-          target.classList.add('animate-in')
-          observer.value.unobserve(target)
+          observedElements.add(element)
+          callback(entry)
         }
       })
     }, options)
+
+    observer.observe(element)
+    return observer
   }
 
-  const observe = (element) => {
-    if (element && observer.value) {
-      observedElements.value.push(element)
-      observer.value.observe(element)
+  const unobserve = (element) => {
+    if (observer && element) {
+      observer.unobserve(element)
     }
   }
 
-  const disconnect = () => {
-    if (observer.value) {
-      observer.value.disconnect()
+  onUnmounted(() => {
+    if (observer) {
+      observer.disconnect()
     }
-  }
+  })
 
-  onUnmounted(disconnect)
-
-  return {
-    initObserver,
-    observe,
-    disconnect
-  }
-} 
+  return { observe, unobserve }
+}

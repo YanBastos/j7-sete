@@ -12,7 +12,7 @@
   </div>
 
   <div>
-    <Contador />
+    <ContadorItem />
   </div>
   <div>
     <Services />
